@@ -46,11 +46,12 @@ class NotebookAPIHandler(TokenAuthorizationMixin,
     services.cell.parser.APICellParser for detail about how the source cells
     are identified, parsed, and associated with HTTP verbs and paths.
     """
-    def initialize(self, sources, response_sources, kernel_pool, kernel_name, kernel_language=''):
+    def initialize(self, sources, response_sources, kernel_pool, kernel_name, parameterized_path, kernel_language=''):
         self.kernel_pool = kernel_pool
         self.sources = sources
         self.kernel_name = kernel_name
         self.response_sources = response_sources
+        self.parameterized_path = parameterized_path
         self.kernel_language = kernel_language
 
     def finish_future(self, future, result_accumulator):
@@ -118,6 +119,9 @@ class NotebookAPIHandler(TokenAuthorizationMixin,
                 # is non-confirming and does not name the stream
                 if 'name' not in msg['content'] or msg['content']['name'] == 'stdout':
                     result_accumulator['stream'].append((msg['content']['text']))
+                if msg['content']['name'] == 'stderr':
+                    print("[{}] {}".format(self.parameterized_path, msg['content']['text']))
+
             # Store the error message
             elif msg['header']['msg_type'] == 'error':
                 error_name = msg['content']['ename']
