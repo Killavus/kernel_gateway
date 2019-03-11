@@ -51,7 +51,8 @@ aliases.update({
     'seed_uri': 'KernelGatewayApp.seed_uri',
     'keyfile': 'KernelGatewayApp.keyfile',
     'certfile': 'KernelGatewayApp.certfile',
-    'client-ca': 'KernelGatewayApp.client_ca'
+    'client-ca': 'KernelGatewayApp.client_ca',
+    'watson-config': 'KernelGatewayApp.watson_config'
 })
 
 
@@ -297,6 +298,13 @@ class KernelGatewayApp(JupyterApp):
     def client_ca_default(self):
         return os.getenv(self.client_ca_env)
 
+    watson_config_env = 'KG_WATSON_CONFIG'
+    watson_config = Unicode(None, config=True, allow_none=True, help="""Path to watson config for enhanced error logging capabilities.""")
+
+    @default("watson_config")
+    def watson_config_default(self):
+        return os.getenv(self.watson_config_env, self.watson_config_default)
+        
     kernel_spec_manager = Instance(KernelSpecManager, allow_none=True)
 
     kernel_spec_manager_class = Type(

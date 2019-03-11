@@ -13,7 +13,8 @@ from .handlers import NotebookAPIHandler, parameterize_path, NotebookDownloadHan
 from notebook.utils import url_path_join
 from traitlets import Bool, Unicode, Dict, default
 from traitlets.config.configurable import LoggingConfigurable
-
+from .watson.config import Config
+from .watson.error_queue import ErrorQueue
 
 class NotebookHTTPPersonality(LoggingConfigurable):
     """Personality for notebook-http support, creating REST endpoints
@@ -71,6 +72,9 @@ class NotebookHTTPPersonality(LoggingConfigurable):
                                comment_prefix=prefix,
                                notebook_cells=self.parent.seed_notebook.cells)
         self.kernel_language = kernel_language
+        if self.parent.watson_config is not None:
+            self.watson_config = Config(self.parent.watson_config)    
+            self.watson_error_queue = ErrorQueue(self.watson_config.get("redis"))
 
     def init_configurables(self):
         """Create a managed kernel pool"""
@@ -125,7 +129,8 @@ class NotebookHTTPPersonality(LoggingConfigurable):
                 'kernel_pool' : self.kernel_pool,
                 'kernel_name' : self.parent.kernel_manager.seed_kernelspec,
                 'kernel_language' : self.kernel_language or '',
-                'parameterized_path': parameterized_path 
+                'parameterized_path': parameterized_path,
+                'error_queue': self.watson_error_queue, 
             }
             handlers.append((parameterized_path, NotebookAPIHandler, handler_args))
 

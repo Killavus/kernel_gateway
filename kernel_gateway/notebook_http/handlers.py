@@ -46,12 +46,13 @@ class NotebookAPIHandler(TokenAuthorizationMixin,
     services.cell.parser.APICellParser for detail about how the source cells
     are identified, parsed, and associated with HTTP verbs and paths.
     """
-    def initialize(self, sources, response_sources, kernel_pool, kernel_name, parameterized_path, kernel_language=''):
+    def initialize(self, sources, response_sources, kernel_pool, kernel_name, parameterized_path, error_queue, kernel_language=''):
         self.kernel_pool = kernel_pool
         self.sources = sources
         self.kernel_name = kernel_name
         self.response_sources = response_sources
         self.parameterized_path = parameterized_path
+        self.error_queue = error_queue
         self.kernel_language = kernel_language
 
     def finish_future(self, future, result_accumulator):
@@ -120,12 +121,16 @@ class NotebookAPIHandler(TokenAuthorizationMixin,
                 if 'name' not in msg['content'] or msg['content']['name'] == 'stdout':
                     result_accumulator['stream'].append((msg['content']['text']))
                 if msg['content']['name'] == 'stderr':
-                    print("[{}] {}".format(self.parameterized_path, msg['content']['text']))
+                    print("[{}] {}".format(self.parameterized_path, msg['content']['text']), end='')
 
             # Store the error message
             elif msg['header']['msg_type'] == 'error':
                 error_name = msg['content']['ename']
                 error_value = msg['content']['evalue']
+                
+                if self.error_queue:
+                    self.error_queue.push(self.parameterized_path, msg['content'])
+
                 result_accumulator['error'] = 'Error {}: {} \n'.format(error_name, error_value)
 
     def execute_code(self, kernel_client, kernel_id, source_code):

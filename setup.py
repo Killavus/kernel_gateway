@@ -44,6 +44,7 @@ containerized and scaled out using common technologies like
         'kernel_gateway.notebook_http',
         'kernel_gateway.notebook_http.cell',
         'kernel_gateway.notebook_http.swagger',
+        'kernel_gateway.notebook_http.watson',
         'kernel_gateway.services',
         'kernel_gateway.services.kernels',
         'kernel_gateway.services.kernelspecs',
